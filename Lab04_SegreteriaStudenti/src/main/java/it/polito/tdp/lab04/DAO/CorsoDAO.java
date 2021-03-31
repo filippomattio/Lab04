@@ -35,6 +35,8 @@ public class CorsoDAO {
 				int periodoDidattico = rs.getInt("pd");
 
 				System.out.println(codins + " " + numeroCrediti + " " + nome + " " + periodoDidattico);
+				Corso c = new Corso(codins, numeroCrediti, nome, periodoDidattico);
+				corsi.add(c);
 
 				// Crea un nuovo JAVA Bean Corso
 				// Aggiungi il nuovo oggetto Corso alla lista corsi
@@ -60,19 +62,90 @@ public class CorsoDAO {
 	}
 
 	/*
-	 * Ottengo tutti gli studenti iscritti al Corso
+	 * Ottengo tutti i corsi a cui è iscritto uno studente
 	 */
-	public void getStudentiIscrittiAlCorso(Corso corso) {
+	public List<Corso> getCorsi(Integer matricola) {
+		final String sql = "SELECT c.codins, c.nome, c.crediti, c.pd "
+				+ "FROM corso c, iscrizione i "
+				+ "WHERE c.codins=i.codins AND i.matricola = ? "
+				+ "GROUP BY c.codins, c.nome, c.crediti, c.pd";
+
+		List<Corso> corsi = new LinkedList<Corso>();
+
+		try {
+			Connection conn = ConnectDB.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+            st.setInt(1, matricola);
+			ResultSet rs = st.executeQuery();
+
+			while (rs.next()) {
+
+				String codins = rs.getString("codins");
+				int numeroCrediti = rs.getInt("crediti");
+				String nome = rs.getString("nome");
+				int periodoDidattico = rs.getInt("pd");
+
+				Corso c = new Corso(codins, numeroCrediti, nome, periodoDidattico);
+				corsi.add(c);
+
+				
+			}
+			rs.close();
+			st.close();
+
+			conn.close();
+			
+			return corsi;
+			
+
+		} catch (SQLException e) {
+			// e.printStackTrace();
+			throw new RuntimeException("Errore Db", e);
+		}
 		// TODO
+		
 	}
 
-	/*
-	 * Data una matricola ed il codice insegnamento, iscrivi lo studente al corso.
-	 */
-	public boolean inscriviStudenteACorso(Studente studente, Corso corso) {
-		// TODO
-		// ritorna true se l'iscrizione e' avvenuta con successo
-		return false;
+	
+	public boolean studenteFrequenta(Integer studente, String corso) {
+		final String sql = "SELECT i.matricola, c.nome "
+				+ "FROM iscrizione i, corso c "
+				+ "WHERE  c.codins=i.codins AND c.nome =? AND i.matricola=?";
+
+		
+
+		try {
+			Connection conn = ConnectDB.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setString(1, corso);
+            st.setInt(2, studente);
+			ResultSet rs = st.executeQuery();
+			Integer matr=0;
+			while (rs.next()) {
+
+				 matr = rs.getInt("matricola");
+				
+
+				
+			}
+			rs.close();
+			st.close();
+
+			conn.close();
+			if(matr==0) {
+				return false;
+			}else {
+				return true;
+			}
+			
+		
+			
+
+		} catch (SQLException e) {
+			// e.printStackTrace();
+			throw new RuntimeException("Errore Db", e);
+		}
+		
 	}
 
 }
